@@ -437,4 +437,20 @@
       </build>
     </profile>
   </profiles>
+  <distributionManagement>
+
+    <repository>
+        <id>maven-releases</id>
+        <name>Nexus Release Repository</name>
+        <url>http://<NEXUS_PUBLIC_IP>:8081/repository/maven-releases/</url>
+    </repository>
+
+    <snapshotRepository>
+        <id>maven-snapshots</id>
+        <name>Nexus Snapshot Repository</name>
+        <url>http://<NEXUS_PUBLIC_IP>:8081/repository/maven-snapshots/</url>
+    </snapshotRepository>
+
+</distributionManagement>
+
 </project>
