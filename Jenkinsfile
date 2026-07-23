@@ -48,7 +48,7 @@ pipeline {
                         mvn deploy \
                           -s $MAVEN_SETTINGS \
                           -DskipTests \
-                          -Dnexus.url=http://54.209.57.82:8081
+                          -Dnexus.url=$NEXUS_URL
                     '''
                 }
             }
