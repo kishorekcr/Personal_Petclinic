@@ -46,9 +46,9 @@ pipeline {
                 ]) {
                     sh '''
                         mvn deploy \
-                        -s $MAVEN_SETTINGS \
-                        -DskipTests \
-                        -DaltDeploymentRepository=maven-snapshots::default::http://54.209.57.82:8081/repository/maven-snapshots/
+                          -s $MAVEN_SETTINGS \
+                          -DskipTests \
+                          -Dnexus.url=http://54.209.57.82:8081
                     '''
                 }
             }
