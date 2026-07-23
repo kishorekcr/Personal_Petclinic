@@ -35,6 +35,24 @@ pipeline {
                 }
             }
         }
+
+        stage('Deploy to Nexus') {
+            steps {
+                configFileProvider([
+                    configFile(
+                        fileId: 'd0a2cf88-2da5-4356-8cbf-4be592fb6d75',
+                        variable: 'MAVEN_SETTINGS'
+                    )
+                ]) {
+                    sh '''
+                        mvn deploy \
+                        -s $MAVEN_SETTINGS \
+                        -DskipTests \
+                        -DaltDeploymentRepository=maven-snapshots::default::http://54.209.57.82:8081/repository/maven-snapshots/
+                    '''
+                }
+            }
+        }
     }
 
     post {
