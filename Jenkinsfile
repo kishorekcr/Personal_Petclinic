@@ -14,14 +14,27 @@ pipeline {
                 sh 'mvn clean test'
             }
         }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    sh '''
+                        mvn sonar:sonar \
+                        -Dsonar.projectKey=Petclinic \
+                        -Dsonar.projectName=Petclinic
+                    '''
+                }
+            }
+        }
     }
 
     post {
         success {
-            echo 'Build completed successfully!'
+            echo 'Pipeline completed successfully!'
         }
+
         failure {
-            echo 'Build failed!'
+            echo 'Pipeline failed!'
         }
     }
 }
