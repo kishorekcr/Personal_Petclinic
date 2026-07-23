@@ -437,4 +437,16 @@
       </build>
     </profile>
   </profiles>
+<distributionManagement>
+    <snapshotRepository>
+        <id>maven-snapshots</id>
+        <url>${nexus.url}/repository/maven-snapshots/</url>
+    </snapshotRepository>
+
+    <repository>
+        <id>maven-releases</id>
+        <url>${nexus.url}/repository/maven-releases/</url>
+    </repository>
+</distributionManagement>
+
 </project>
