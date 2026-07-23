@@ -9,9 +9,9 @@ pipeline {
             }
         }
 
-        stage('Build & Test') {
+        stage('Build, Test & JaCoCo') {
             steps {
-                sh 'mvn clean test'
+                sh 'mvn clean verify'
             }
         }
 
@@ -21,7 +21,8 @@ pipeline {
                     sh '''
                         mvn sonar:sonar \
                         -Dsonar.projectKey=Petclinic \
-                        -Dsonar.projectName=Petclinic
+                        -Dsonar.projectName=Petclinic \
+                        -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
                     '''
                 }
             }
@@ -29,6 +30,10 @@ pipeline {
     }
 
     post {
+        always {
+            archiveArtifacts artifacts: 'target/site/jacoco/**', fingerprint: true
+        }
+
         success {
             echo 'Pipeline completed successfully!'
         }
