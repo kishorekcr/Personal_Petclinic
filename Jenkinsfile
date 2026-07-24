@@ -80,6 +80,22 @@ pipeline {
                 '''
             }
         }
+
+        stage('Trivy Scan') {
+            steps {
+                sh '''
+                    mkdir -p $HOME/trivytmp
+                    mkdir -p $HOME/.cache/trivy
+
+                    TMPDIR=$HOME/trivytmp \
+                    trivy image \
+                        --cache-dir $HOME/.cache/trivy \
+                        --severity HIGH,CRITICAL \
+                        --exit-code 1 \
+                        $IMAGE_NAME:latest
+                '''
+            }
+        }
     }
 
     post {
