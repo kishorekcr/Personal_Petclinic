@@ -34,32 +34,18 @@ RUN java -Djarmode=layertools -jar target/*.jar extract --destination extracted
 # Stage 2: Runtime
 # Minimal JRE (not full JDK) - smaller attack surface, smaller image.
 #############################################
-FROM eclipse-temurin:21-jre-jammy AS runtime
+FFROM eclipse-temurin:21-jre-jammy AS runtime
 
-# Run as a dedicated non-root user - never run application
-# containers as root in production.
 RUN groupadd -r spring && useradd -r -g spring spring
 
 WORKDIR /app
 
-# Copy extracted layers in order of change-frequency (least to
-# most likely to change) - maximizes Docker layer cache hits.
-COPY --from=build --chown=spring:spring /app/extracted/dependencies/ ./
-COPY --from=build --chown=spring:spring /app/extracted/spring-boot-loader/ ./
-COPY --from=build --chown=spring:spring /app/extracted/snapshot-dependencies/ ./
-COPY --from=build --chown=spring:spring /app/extracted/application/ ./
+COPY --from=build --chown=spring:spring /app/target/*.jar app.jar
 
 USER spring:spring
 
 EXPOSE 8080
 
-# Health checking is handled by Kubernetes liveness/readiness
-# probes at the pod level (hitting /actuator/health from outside
-# the container) rather than a Docker-level HEALTHCHECK here -
-# avoids needing curl/wget baked into the runtime image at all.
-
-# JVM container-awareness flags: respect cgroup memory limits set
-# by Docker/Kubernetes instead of reading host machine's total RAM.
 ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
 
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS org.springframework.boot.loader.launch.JarLauncher"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
