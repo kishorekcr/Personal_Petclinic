@@ -1,6 +1,15 @@
 pipeline {
     agent any
 
+    tools {
+        jdk 'JDK21'
+        maven 'Maven'
+    }
+
+    environment {
+        IMAGE_NAME = 'petclinic'
+    }
+
     stages {
 
         stage('Checkout') {
@@ -9,7 +18,7 @@ pipeline {
             }
         }
 
-        stage('Build, Test & JaCoCo') {
+        stage('Build') {
             steps {
                 sh 'mvn clean verify'
             }
@@ -20,9 +29,8 @@ pipeline {
                 withSonarQubeEnv('SonarQube') {
                     sh '''
                         mvn sonar:sonar \
-                        -Dsonar.projectKey=Petclinic \
-                        -Dsonar.projectName=Petclinic \
-                        -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+                          -Dsonar.projectKey=Personal_Petclinic \
+                          -Dsonar.projectName=Personal_Petclinic
                     '''
                 }
             }
@@ -53,19 +61,38 @@ pipeline {
                 }
             }
         }
+
+        stage('Build Docker Image') {
+            steps {
+                sh '''
+                    docker build \
+                        -t $IMAGE_NAME:${BUILD_NUMBER} \
+                        -t $IMAGE_NAME:latest .
+                '''
+            }
+        }
+
+        stage('Verify Docker Image') {
+            steps {
+                sh '''
+                    echo "Available Docker Images:"
+                    docker images | grep $IMAGE_NAME
+                '''
+            }
+        }
     }
 
     post {
-        always {
-            archiveArtifacts artifacts: 'target/site/jacoco/**', fingerprint: true
-        }
-
         success {
-            echo 'Pipeline completed successfully!'
+            echo '✅ CI Pipeline completed successfully!'
         }
 
         failure {
-            echo 'Pipeline failed!'
+            echo '❌ Pipeline failed!'
+        }
+
+        always {
+            cleanWs()
         }
     }
 }
