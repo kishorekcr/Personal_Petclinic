@@ -1,0 +1,17 @@
+target/
+.git/
+.gitignore
+.idea/
+*.iml
+.vscode/
+.mvn/
+mvnw
+mvnw.cmd
+*.log
+Dockerfile
+docker-compose.yml
+README.md
+.dockerignore
+K8s/
+.github/
+Jenkinsfile
