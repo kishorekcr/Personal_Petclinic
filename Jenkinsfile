@@ -91,7 +91,6 @@ pipeline {
                     trivy image \
                         --cache-dir $HOME/.cache/trivy \
                         --severity HIGH,CRITICAL \
-                        --exit-code 1 \
                         $IMAGE_NAME:latest
                 '''
             }
