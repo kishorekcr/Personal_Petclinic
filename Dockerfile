@@ -23,12 +23,7 @@ RUN mvn -B dependency:go-offline
 COPY src ./src
 RUN mvn -B clean package -DskipTests
 
-# Extract the Spring Boot layered jar into separate layers
-# (dependencies, spring-boot-loader, snapshot-dependencies,
-# application classes). This lets Docker cache dependency layers
-# independently from your actual application code in Stage 2 -
-# app-only rebuilds become much smaller/faster to push and pull.
-RUN java -Djarmode=layertools -jar target/*.jar extract --destination extracted
+
 
 #############################################
 # Stage 2: Runtime
