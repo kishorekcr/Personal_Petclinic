@@ -34,7 +34,7 @@ RUN java -Djarmode=layertools -jar target/*.jar extract --destination extracted
 # Stage 2: Runtime
 # Minimal JRE (not full JDK) - smaller attack surface, smaller image.
 #############################################
-FFROM eclipse-temurin:21-jre-jammy AS runtime
+FROM eclipse-temurin:21-jre-jammy AS runtime
 
 RUN groupadd -r spring && useradd -r -g spring spring
 
