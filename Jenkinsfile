@@ -7,7 +7,10 @@ pipeline {
     }
 
     environment {
-        IMAGE_NAME = 'petclinic'
+        IMAGE_NAME     = 'petclinic'
+        AWS_REGION     = 'us-east-1'
+        AWS_ACCOUNT_ID = '316777658873'
+        ECR_REGISTRY   = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
     }
 
     stages {
@@ -95,6 +98,54 @@ pipeline {
                 '''
             }
         }
+
+        stage('Login to Amazon ECR') {
+            steps {
+                sh '''
+                    aws ecr get-login-password --region $AWS_REGION | \
+                    docker login \
+                        --username AWS \
+                        --password-stdin $ECR_REGISTRY
+                '''
+            }
+        }
+
+        stage('Tag Docker Image') {
+            steps {
+                sh '''
+                    docker tag \
+                        $IMAGE_NAME:latest \
+                        $ECR_REGISTRY/$IMAGE_NAME:latest
+                '''
+            }
+        }
+
+        stage('Verify ECR Image Tag') {
+            steps {
+                sh '''
+                    echo "Docker Images After ECR Tagging:"
+                    docker images | grep $IMAGE_NAME
+                '''
+            }
+        }
+
+        stage('Push Docker Image to ECR') {
+            steps {
+                sh '''
+                    docker push $ECR_REGISTRY/$IMAGE_NAME:latest
+                '''
+            }
+        }
+
+        stage('Verify Image in ECR') {
+            steps {
+                sh '''
+                    aws ecr describe-images \
+                        --repository-name $IMAGE_NAME \
+                        --region $AWS_REGION
+                '''
+            }
+        }
     }
 
     post {
@@ -107,6 +158,22 @@ pipeline {
         }
 
         always {
+            sh '''
+                echo "Docker Disk Usage - Before Cleanup"
+                docker system df
+
+                # Remove the build-specific image tag
+                docker image rm -f $IMAGE_NAME:${BUILD_NUMBER} || true
+
+                # Remove dangling images
+                docker image prune -f
+
+                # Remove unused Docker build cache
+                docker builder prune -f
+
+                echo "Docker Disk Usage - After Cleanup"
+                docker system df
+            '''
             cleanWs()
         }
     }
