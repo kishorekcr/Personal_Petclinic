@@ -11,6 +11,7 @@ pipeline {
         AWS_REGION     = 'us-east-1'
         AWS_ACCOUNT_ID = '316777658873'
         ECR_REGISTRY   = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+        EKS_CLUSTER =    'myapp-staging-eks'
     }
 
     stages {
@@ -31,7 +32,7 @@ pipeline {
             steps {
                 withSonarQubeEnv('SonarQube') {
                     sh '''
-                        mvn sonar:sonar \
+                        mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
                           -Dsonar.projectKey=Petclinic \
                           -Dsonar.projectName=Petclinic
                     '''
@@ -116,6 +117,10 @@ pipeline {
                     docker tag \
                         $IMAGE_NAME:latest \
                         $ECR_REGISTRY/$IMAGE_NAME:latest
+                    
+                    docker tag \
+                        $IMAGE_NAME:${BUILD_NUMBER} \
+                        $ECR_REGISTRY/$IMAGE_NAME:${BUILD_NUMBER}
                 '''
             }
         }
@@ -143,9 +148,83 @@ pipeline {
                     aws ecr describe-images \
                         --repository-name $IMAGE_NAME \
                         --region $AWS_REGION
+                        --query 'imageDetails[*].imageTags'
                 '''
             }
         }
+
+        stage('Configure kubectl') {
+            steps {
+                sh '''
+                    aws eks update-kubeconfig \
+                        --region $AWS_REGION \
+                        --name $EKS_CLUSTER
+
+                    kubectl config current-context
+
+                    kubectl get nodes
+                '''
+            }
+        }
+
+        stage('Helm Lint') {
+        steps {
+            sh '''
+                helm lint helm/petclinic
+            '''
+        }
+    }
+
+    stage('Helm Template Validation') {
+        steps {
+            sh '''
+                helm template petclinic helm/petclinic > rendered.yaml
+                echo "Helm template validation successful."
+                rm -f rendered.yaml
+            '''
+        }
+    }
+
+    stage('Deploy to EKS') {
+        steps {
+            sh '''
+                helm upgrade --install petclinic \
+                helm/petclinic \
+                -n petclinic \
+                --create-namespace \
+                --wait \
+                --timeout 5m
+            '''
+        }
+    }
+
+    stage('Verify Deployment') {
+        steps {
+            sh '''
+                echo "Waiting for deployment rollout..."
+
+                kubectl rollout status deployment/petclinic \
+                    -n petclinic \
+                    --timeout=300s
+
+                echo "Pods"
+                kubectl get pods -n petclinic
+
+                echo "Services"
+                kubectl get svc -n petclinic
+
+                echo "Ingress"
+                kubectl get ingress -n petclinic
+
+                echo "PVC"
+                kubectl get pvc -n petclinic
+
+                echo "HPA"
+                kubectl get hpa -n petclinic
+            '''
+        }
+}
+
     }
 
     post {
