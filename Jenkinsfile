@@ -147,7 +147,7 @@ pipeline {
                 sh '''
                     aws ecr describe-images \
                         --repository-name $IMAGE_NAME \
-                        --region $AWS_REGION
+                        --region $AWS_REGION \
                         --query 'imageDetails[*].imageTags'
                 '''
             }
