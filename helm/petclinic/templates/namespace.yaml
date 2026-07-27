@@ -4,4 +4,4 @@ metadata:
   name: {{.Values.namespace.name}}
   labels:
     app: {{.Values.labels.app}}
-    env: {{.Values.lables.env}}
+    env: {{.Values.labels.env}}
