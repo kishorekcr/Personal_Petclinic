@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: petclinic
+  name: {{.Values.namespace.name}}
   labels:
-    app: petclinic
-    env: dev
+    app: {{.Values.labels.app}}
+    env: {{.Values.lables.env}}

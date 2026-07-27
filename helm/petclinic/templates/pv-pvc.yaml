@@ -2,12 +2,12 @@
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
-  name: ebs-gp3
+  name: {{.Values.storageclass.name}}
 provisioner: ebs.csi.aws.com
 parameters:
-  type: gp3
+  type: {{ .Values.storageClass.type }}
   fsType: ext4
-reclaimPolicy: Retain
+reclaimPolicy: {{ .Values.storageClass.reclaimPolicy }}
 volumeBindingMode: WaitForFirstConsumer
 allowVolumeExpansion: true
 ---
@@ -15,12 +15,12 @@ allowVolumeExpansion: true
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: mysql-pvc
-  namespace: petclinic
+  name: {{ .Values.persistence.pvcName }}
+  namespace: {{ .Values.namespace.name }}
 spec:
-  storageClassName: ebs-gp3
+  storageClassName: {{ .Values.storageClass.name }}
   accessModes:
-    - ReadWriteOnce
+    - {{ .Values.persistence.accessMode }}
   resources:
     requests:
-      storage: 5Gi
+      storage: {{ .Values.persistence.size }}

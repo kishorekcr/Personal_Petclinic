@@ -1,38 +1,37 @@
-# -------------------------------------------------------
-# PetClinic App Deployment
-# -------------------------------------------------------
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: petclinic
-  namespace: petclinic
+  name: {{ .Values.app.name }}
+  namespace: {{ .Values.namespace.name }}
   labels:
-    app: petclinic
+    app: {{ .Values.app.name }}
+
 spec:
-  replicas: 2                  # Start with 2, HPA will scale up/down
+  replicas: {{ .Values.app.replicas }}
+
   selector:
     matchLabels:
-      app: petclinic
+      app: {{ .Values.app.name }}
+
   strategy:
-    type: RollingUpdate        # Zero downtime deployment
+    type: RollingUpdate
     rollingUpdate:
-      maxSurge: 1              # 1 extra pod during update
-      maxUnavailable: 0        # Never go below desired replicas
+      maxSurge: 1
+      maxUnavailable: 0
+
   template:
     metadata:
       labels:
-        app: petclinic
-    spec:
-      # ---- Taint & Toleration (concept coverage) ----
-      # If your node has taint: app=petclinic:NoSchedule
-      # only pods with this toleration will be scheduled there
-      tolerations:
-        - key: "app"
-          operator: "Equal"
-          value: "petclinic"
-          effect: "NoSchedule"
+        app: {{ .Values.app.name }}
 
-      # ---- Node Affinity (prefer app nodes) ----
+    spec:
+
+      tolerations:
+        - key: {{ .Values.app.toleration.key | quote }}
+          operator: Equal
+          value: {{ .Values.app.toleration.value | quote }}
+          effect: NoSchedule
+
       affinity:
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -42,61 +41,8 @@ spec:
                   - key: role
                     operator: In
                     values:
-                      - app
+                      - {{ .Values.app.affinity.nodeRole }}
 
-      containers:
-        - name: petclinic
-          image: prakish980/petclinic:latest    # Your DockerHub image
-          imagePullPolicy: Always
-          ports:
-            - containerPort: 8080
-          
-          # ConfigMap env vars
-          envFrom:
-            - configMapRef:
-                name: petclinic-config
-
-          # Secret env vars
-          env:
-            - name: MYSQL_USER
-              valueFrom:
-                secretKeyRef:
-                  name: petclinic-secret
-                  key: MYSQL_USER
-            - name: MYSQL_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: petclinic-secret
-                  key: MYSQL_PASSWORD
-
-          # Resource limits (required for HPA to work!)
-          resources:
-            requests:
-              cpu: "250m"       # HPA watches this
-              memory: "512Mi"
-            limits:
-              cpu: "500m"
-              memory: "1Gi"
-
-          # Liveness — is the app alive? Restart if fails
-          livenessProbe:
-            httpGet:
-              path: /actuator/health
-              port: 8080
-            initialDelaySeconds: 60
-            periodSeconds: 15
-            failureThreshold: 3
-
-          # Readiness — is app ready to receive traffic?
-          readinessProbe:
-            httpGet:
-              path: /actuator/health
-              port: 8080
-            initialDelaySeconds: 45
-            periodSeconds: 10
-            failureThreshold: 3
-
-      # Init container — wait for MySQL to be ready before app starts
       initContainers:
         - name: wait-for-mysql
           image: busybox
@@ -104,8 +50,54 @@ spec:
             - sh
             - -c
             - |
-              until nc -z mysql-service 3306; do
+              until nc -z {{ .Values.mysql.service }} {{ .Values.mysql.port }}; do
                 echo "Waiting for MySQL...";
                 sleep 3;
               done
               echo "MySQL is ready!"
+
+      containers:
+        - name: {{ .Values.app.name }}
+
+          image: "{{ .Values.app.image.repository }}:{{ .Values.app.image.tag }}"
+
+          imagePullPolicy: {{ .Values.app.image.pullPolicy }}
+
+          ports:
+            - containerPort: {{ .Values.app.port }}
+
+          envFrom:
+            - configMapRef:
+                name: {{ .Values.configMap.name }}
+
+          env:
+            - name: MYSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secret.name }}
+                  key: MYSQL_USER
+
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secret.name }}
+                  key: MYSQL_PASSWORD
+
+          resources:
+            {{- toYaml .Values.app.resources | nindent 12 }}
+
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: {{ .Values.app.port }}
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: {{ .Values.app.port }}
+            initialDelaySeconds: 45
+            periodSeconds: 10
+            failureThreshold: 3

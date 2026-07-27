@@ -1,86 +1,78 @@
-# -------------------------------------------------------
-# MySQL Deployment
-# -------------------------------------------------------
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mysql
-  namespace: petclinic
+  name: {{ .Values.mysql.name }}
+  namespace: {{ .Values.namespace.name }}
   labels:
-    app: mysql
+    app: {{ .Values.mysql.name }}
 spec:
-  replicas: 1             # DB always 1 replica (single writer)
+  replicas: {{ .Values.mysql.replicas }}
   selector:
     matchLabels:
-      app: mysql
+      app: {{ .Values.mysql.name }}
   strategy:
-    type: Recreate        # Stop old pod first, then start new (safe for DB)
+    type: Recreate
   template:
     metadata:
       labels:
-        app: mysql
+        app: {{ .Values.mysql.name }}
     spec:
       containers:
-        - name: mysql
-          image: mysql:8.0
+        - name: {{ .Values.mysql.name }}
+          image: {{ .Values.mysql.image }}
           ports:
-            - containerPort: 3306
+            - containerPort: {{ .Values.mysql.port }}
+
           env:
             - name: MYSQL_DATABASE
-              value: petclinic
+              value: {{ .Values.mysql.database | quote }}
+
             - name: MYSQL_USER
               valueFrom:
                 secretKeyRef:
-                  name: petclinic-secret
+                  name: {{ .Values.secret.name }}
                   key: MYSQL_USER
+
             - name: MYSQL_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: petclinic-secret
+                  name: {{ .Values.secret.name }}
                   key: MYSQL_PASSWORD
+
             - name: MYSQL_ROOT_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: petclinic-secret
+                  name: {{ .Values.secret.name }}
                   key: MYSQL_ROOT_PASSWORD
+
           volumeMounts:
             - name: mysql-storage
-              mountPath: /var/lib/mysql   # MySQL data directory
+              mountPath: /var/lib/mysql
+
           resources:
-            requests:
-              cpu: "250m"
-              memory: "512Mi"
-            limits:
-              cpu: "500m"
-              memory: "1Gi"
+            {{- toYaml .Values.mysql.resources | nindent 12 }}
+
           livenessProbe:
             exec:
-              command: ["mysqladmin", "ping", "-h", "localhost"]
+              command:
+                - mysqladmin
+                - ping
+                - "-h"
+                - localhost
             initialDelaySeconds: 30
             periodSeconds: 10
+
           readinessProbe:
             exec:
-              command: ["mysqladmin", "ping", "-h", "localhost"]
+              command:
+                - mysqladmin
+                - ping
+                - "-h"
+                - localhost
             initialDelaySeconds: 20
             periodSeconds: 5
+
       volumes:
         - name: mysql-storage
           persistentVolumeClaim:
-            claimName: mysql-pvc     # Binds to our PVC
-
----
-# -------------------------------------------------------
-# MySQL Service — ClusterIP (internal only, app talks to DB)
-# -------------------------------------------------------
-apiVersion: v1
-kind: Service
-metadata:
-  name: mysql-service
-  namespace: petclinic
-spec:
-  selector:
-    app: mysql
-  ports:
-    - port: 3306
-      targetPort: 3306
-  type: ClusterIP     # DB should never be exposed externally
+            claimName: {{ .Values.persistence.pvcName }}
