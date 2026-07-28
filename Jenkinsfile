@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent 'dynamic-agent'
 
     tools {
         jdk 'JDK21'
