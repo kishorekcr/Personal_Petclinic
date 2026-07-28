@@ -31,7 +31,7 @@ metadata:
     alb.ingress.kubernetes.io/unhealthy-threshold-count: "3"
 
     alb.ingress.kubernetes.io/tags: {{ .Values.ingress.tags }}
-    # alb.ingress.kubernetes.io/subnets: subnet-0c3aa5036f3473351,subnet-0b152ccfd1b879ee7,subnet-0e55bf48b08993f79
+    alb.ingress.kubernetes.io/subnets: subnet-04aeb825d280772d8,subnet-0ecf6ad77fbfa360a,subnet-05e1960bfe1783678
 spec:
   rules:
     - host: {{ .Values.ingress.host }}
