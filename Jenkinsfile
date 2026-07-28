@@ -1,6 +1,8 @@
 pipeline {
-    agent 'dynamic-agent'
-
+    agent {
+        label 'dynamic-agent'
+    }
+    
     tools {
         jdk 'JDK21'
         maven 'Maven3'
