@@ -40,26 +40,8 @@ spec:
                 echo "===== MAVEN ====="
                 mvn -version
 
-                echo "===== GIT ====="
-                git --version
-
-                echo "===== KUBECTL ====="
-                kubectl version --client
-
-                echo "===== HELM ====="
-                helm version
-
-                echo "===== AWS CLI ====="
-                aws --version
-
-                echo "===== JQ ====="
-                jq --version
-
-                echo "===== CURRENT DIR ====="
+                echo "===== WORKSPACE ====="
                 pwd
-
-                echo "===== FILES ====="
-                ls -la
                 '''
             }
         }
@@ -70,22 +52,40 @@ spec:
             }
         }
 
-        stage('Verify Tools') {
+        stage('Build & Test') {
             steps {
                 sh '''
-                echo "========== VERIFYING TOOLS =========="
-
-                java -version
-                mvn -version
-                git --version
-                kubectl version --client
-                helm version
-                aws --version
-                jq --version
-
-                echo "✅ All tools are available."
+                echo "===== BUILDING APPLICATION ====="
+                mvn clean verify
                 '''
             }
+        }
+
+        stage('Verify Artifact') {
+            steps {
+                sh '''
+                echo "===== TARGET DIRECTORY ====="
+                ls -lh target
+
+                echo "===== GENERATED JAR ====="
+                ls -lh target/*.jar
+                '''
+            }
+        }
+    }
+
+    post {
+
+        success {
+            echo "✅ Build completed successfully!"
+        }
+
+        failure {
+            echo "❌ Build failed!"
+        }
+
+        always {
+            cleanWs()
         }
     }
 }
