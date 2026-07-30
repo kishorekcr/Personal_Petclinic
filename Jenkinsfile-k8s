@@ -19,7 +19,7 @@ spec:
     - 99d
 
   - name: kubectl
-    image: bitnamilegacy/kubectl:1.33.3-debian-12-r3
+    image: prakish980/jenkins-tools:v1
     command:
     - sleep
     args:
