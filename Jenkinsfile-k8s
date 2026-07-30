@@ -1,0 +1,82 @@
+pipeline {
+    agent {
+        kubernetes {
+            defaultContainer 'maven'
+            yaml """
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: jenkins-agent
+spec:
+  serviceAccountName: jenkins
+  containers:
+  - name: maven
+    image: maven:3.9.9-eclipse-temurin-17
+    command:
+    - sleep
+    args:
+    - 99d
+
+  - name: kubectl
+    image: bitnami/kubectl:latest
+    command:
+    - sleep
+    args:
+    - 99d
+
+  - name: jnlp
+    image: jenkins/inbound-agent:latest
+"""
+        }
+    }
+
+    stages {
+
+        stage('Environment') {
+            steps {
+                sh '''
+                echo "===== USER ====="
+                whoami
+
+                echo "===== JAVA ====="
+                java -version
+
+                echo "===== MAVEN ====="
+                mvn -version
+
+                echo "===== CURRENT DIR ====="
+                pwd
+
+                echo "===== FILES ====="
+                ls -la
+                '''
+            }
+        }
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build') {
+            steps {
+                container('maven') {
+                    sh 'mvn clean package'
+                }
+            }
+        }
+
+        stage('Kubectl Test') {
+            steps {
+                container('kubectl') {
+                    sh '''
+                    kubectl version --client
+                    kubectl get nodes
+                    '''
+                }
+            }
+        }
+    }
+}
