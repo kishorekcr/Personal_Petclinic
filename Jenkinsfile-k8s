@@ -19,7 +19,7 @@ spec:
     - 99d
 
   - name: kubectl
-    image: maven:3.9.9-eclipse-temurin-17
+    image: image: bitnami/kubectl:1.33.4
     command:
     - sleep
     args:
