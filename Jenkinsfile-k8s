@@ -19,7 +19,7 @@ spec:
     - 99d
 
   - name: kubectl
-    image: image: bitnami/kubectl:1.33.4
+    image: bitnami/kubectl:1.33.4
     command:
     - sleep
     args:
