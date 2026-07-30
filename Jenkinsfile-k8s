@@ -1,7 +1,7 @@
 pipeline {
     agent {
         kubernetes {
-            defaultContainer 'maven'
+            defaultContainer 'tools'
             yaml """
 apiVersion: v1
 kind: Pod
@@ -10,16 +10,11 @@ metadata:
     app: jenkins-agent
 spec:
   serviceAccountName: jenkins
-  containers:
-  - name: maven
-    image: maven:3.9.9-eclipse-temurin-17
-    command:
-    - sleep
-    args:
-    - 99d
 
-  - name: kubectl
-    image: prakish980/jenkins-tools:v1
+  containers:
+  - name: tools
+    image: prakish980/jenkins-tools:v2
+    imagePullPolicy: Always
     command:
     - sleep
     args:
@@ -45,6 +40,21 @@ spec:
                 echo "===== MAVEN ====="
                 mvn -version
 
+                echo "===== GIT ====="
+                git --version
+
+                echo "===== KUBECTL ====="
+                kubectl version --client
+
+                echo "===== HELM ====="
+                helm version
+
+                echo "===== AWS CLI ====="
+                aws --version
+
+                echo "===== JQ ====="
+                jq --version
+
                 echo "===== CURRENT DIR ====="
                 pwd
 
@@ -60,15 +70,21 @@ spec:
             }
         }
 
-        stage('Kubectl Test') {
+        stage('Verify Tools') {
             steps {
-                container('maven') {
-                    sh 'echo "Maven OK"'
-                }
+                sh '''
+                echo "========== VERIFYING TOOLS =========="
 
-                container('kubectl') {
-                    sh 'echo "Kubectl OK"'
-                }
+                java -version
+                mvn -version
+                git --version
+                kubectl version --client
+                helm version
+                aws --version
+                jq --version
+
+                echo "✅ All tools are available."
+                '''
             }
         }
     }
