@@ -76,16 +76,34 @@ spec:
 
     post {
 
-        success {
-            echo "✅ Build completed successfully!"
-        }
+    always {
 
-        failure {
-            echo "❌ Build failed!"
-        }
+        echo "Publishing JUnit Test Results..."
 
-        always {
-            cleanWs()
-        }
+        junit(
+            testResults: '**/target/surefire-reports/*.xml',
+            allowEmptyResults: false
+        )
+
+        echo "Publishing JaCoCo Coverage..."
+
+        recordCoverage(
+            tools: [
+                jacoco(
+                    pattern: '**/target/site/jacoco/jacoco.xml'
+                )
+            ]
+        )
+
+        cleanWs()
     }
+
+    success {
+        echo '🎉 Build Successful!'
+    }
+
+    failure {
+        echo '❌ Build Failed!'
+    }
+}
 }
