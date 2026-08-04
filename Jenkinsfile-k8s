@@ -149,18 +149,18 @@ spec:
                 }
             }
 
-            stage('Build & Push Image to ECR') {
-                steps {
-                    container('kaniko') {
-                        sh '''
-                        /kaniko/executor \
-                        --context=$WORKSPACE \
-                        --dockerfile=$WORKSPACE/Dockerfile \
-                        --destination=316777658873.dkr.ecr.us-east-1.amazonaws.com/petclinic:${BUILD_NUMBER} \
-                        --destination=316777658873.dkr.ecr.us-east-1.amazonaws.com/petclinic:latest
-                        '''
-                    }
+        stage('Build & Push Image to ECR') {
+            steps {
+                container('kaniko') {
+                    sh '''
+                    /kaniko/executor \
+                    --context=$WORKSPACE \
+                    --dockerfile=$WORKSPACE/Dockerfile \
+                    --destination=316777658873.dkr.ecr.us-east-1.amazonaws.com/petclinic:${BUILD_NUMBER} \
+                    --destination=316777658873.dkr.ecr.us-east-1.amazonaws.com/petclinic:latest
+                    '''
                 }
+            }
 }
 }
     }
