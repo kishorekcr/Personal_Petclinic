@@ -19,6 +19,14 @@ spec:
     - sleep
     args:
     - 99d
+  
+  - name: kaniko
+    image: gcr.io/kaniko-project/executor:v1.23.2-debug
+    imagePullPolicy: Always
+    command:
+    - sleep
+    args:
+    - 99d
 
   - name: jnlp
     image: jenkins/inbound-agent:latest
@@ -108,6 +116,18 @@ spec:
                         -s $MAVEN_SETTINGS \
                         -DskipTests \
                         -Dnexus.url=$NEXUS_URL
+                    '''
+                }
+            }
+}
+
+        stage('Verify Kaniko') {
+            steps {
+                container('kaniko') {
+                    sh '''
+                    echo "===== VERIFYING KANIKO ====="
+
+                    /kaniko/executor version
                     '''
                 }
             }
