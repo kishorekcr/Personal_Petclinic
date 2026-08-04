@@ -76,34 +76,31 @@ spec:
 
     post {
 
-    always {
+        always {
+            echo "Publishing JUnit Test Results..."
 
-        echo "Publishing JUnit Test Results..."
+            junit(
+                testResults: '**/target/surefire-reports/*.xml',
+                allowEmptyResults: false
+            )
 
-        junit(
-            testResults: '**/target/surefire-reports/*.xml',
-            allowEmptyResults: false
-        )
+            // TODO:
+            // Enable Coverage plugin after verifying the correct DSL
+            // recordCoverage(
+            //     tools: [
+            //         jacoco(pattern: '**/target/site/jacoco/jacoco.xml')
+            //     ]
+            // )
 
-        echo "Publishing JaCoCo Coverage..."
+            cleanWs()
+        }
 
-        // recordCoverage(
-        //     tools: [
-        //         jacoco(
-        //             pattern: '**/target/site/jacoco/jacoco.xml'
-        //         )
-        //     ]
-        // )
+        success {
+            echo 'Pipeline completed successfully.'
+        }
 
-        cleanWs()
+        failure {
+            echo 'Pipeline execution failed.'
+        }
     }
-
-    success {
-        echo '🎉 Build Successful!'
-    }
-
-    failure {
-        echo '❌ Build Failed!'
-    }
-}
 }
