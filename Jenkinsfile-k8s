@@ -132,6 +132,37 @@ spec:
                 }
             }
 }
+
+        stage('Verify IRSA from Kaniko') {
+            steps {
+                container('kaniko') {
+                    sh '''
+                    echo "===== VERIFY IRSA ====="
+
+                    if command -v aws >/dev/null 2>&1; then
+                        aws sts get-caller-identity
+                    else
+                        echo "AWS CLI is not available in the Kaniko image."
+                        echo "This is expected for the official Kaniko image."
+                    fi
+                    '''
+                }
+            }
+
+            stage('Build & Push Image to ECR') {
+                steps {
+                    container('kaniko') {
+                        sh '''
+                        /kaniko/executor \
+                        --context=$WORKSPACE \
+                        --dockerfile=$WORKSPACE/Dockerfile \
+                        --destination=316777658873.dkr.ecr.us-east-1.amazonaws.com/petclinic:${BUILD_NUMBER} \
+                        --destination=316777658873.dkr.ecr.us-east-1.amazonaws.com/petclinic:latest
+                        '''
+                    }
+                }
+}
+}
     }
 
     post {
