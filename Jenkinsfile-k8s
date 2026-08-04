@@ -170,7 +170,34 @@ spec:
                 }
             }
         }
+
+        stage('Verify Image in ECR') {
+            steps {
+                sh '''
+                echo "===== VERIFY IMAGE IN ECR ====="
+
+                aws ecr describe-images \
+                --repository-name petclinic \
+                --region us-east-1 \
+                --query 'imageDetails[*].imageTags'
+                '''
+            }
+        }
         
+        stage('Trivy Scan') {
+            steps {
+                sh '''
+                    mkdir -p $HOME/trivytmp
+                    mkdir -p $HOME/.cache/trivy
+
+                    TMPDIR=$HOME/trivytmp \
+                    trivy image \
+                        --cache-dir $HOME/.cache/trivy \
+                        --severity HIGH,CRITICAL \
+                        316777658873.dkr.ecr.us-east-1.amazonaws.com/petclinic:latest
+                '''
+            }
+        }
 
     }
 
