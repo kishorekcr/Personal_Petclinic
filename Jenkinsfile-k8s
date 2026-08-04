@@ -148,7 +148,7 @@ spec:
                     '''
                 }
             }
-
+        }
         stage('Build & Push Image to ECR') {
             steps {
                 container('kaniko') {
