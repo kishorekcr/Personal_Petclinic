@@ -52,12 +52,32 @@ spec:
             }
         }
 
-        stage('Build & Test') {
+        stage('Build') {
             steps {
                 sh '''
                 echo "===== BUILDING APPLICATION ====="
                 mvn clean verify
                 '''
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    sh '''
+                        mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+                          -Dsonar.projectKey=Petclinic \
+                          -Dsonar.projectName=Petclinic
+                    '''
+                }
+            }
+        }
+
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 5, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
             }
         }
 
@@ -77,6 +97,7 @@ spec:
     post {
 
         always {
+
             echo "Publishing JUnit Test Results..."
 
             junit(
@@ -84,23 +105,15 @@ spec:
                 allowEmptyResults: false
             )
 
-            // TODO:
-            // Enable Coverage plugin after verifying the correct DSL
-            // recordCoverage(
-            //     tools: [
-            //         jacoco(pattern: '**/target/site/jacoco/jacoco.xml')
-            //     ]
-            // )
-
             cleanWs()
         }
 
         success {
-            echo 'Pipeline completed successfully.'
+            echo '✅ Pipeline completed successfully.'
         }
 
         failure {
-            echo 'Pipeline execution failed.'
+            echo '❌ Pipeline execution failed.'
         }
     }
 }
