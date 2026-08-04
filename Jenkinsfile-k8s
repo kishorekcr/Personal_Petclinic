@@ -28,6 +28,12 @@ spec:
     args:
     - 99d
 
+    env:
+    - name: AWS_SDK_LOAD_CONFIG
+        value: "true"
+    - name: AWS_EC2_METADATA_DISABLED
+        value: "true"
+
   - name: jnlp
     image: jenkins/inbound-agent:latest
 """
@@ -150,7 +156,7 @@ spec:
             }
         }
 
-        /*
+        
         stage('Build & Push Image to ECR') {
             steps {
                 container('kaniko') {
@@ -164,7 +170,7 @@ spec:
                 }
             }
         }
-        */
+        
 
     }
 
