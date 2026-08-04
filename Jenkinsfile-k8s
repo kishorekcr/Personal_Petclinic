@@ -87,13 +87,13 @@ spec:
 
         echo "Publishing JaCoCo Coverage..."
 
-        recordCoverage(
-            tools: [
-                jacoco(
-                    pattern: '**/target/site/jacoco/jacoco.xml'
-                )
-            ]
-        )
+        // recordCoverage(
+        //     tools: [
+        //         jacoco(
+        //             pattern: '**/target/site/jacoco/jacoco.xml'
+        //         )
+        //     ]
+        // )
 
         cleanWs()
     }
