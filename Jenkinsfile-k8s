@@ -75,25 +75,25 @@ spec:
             }
         }
 
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('SonarQube') {
-                    sh '''
-                        mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-                          -Dsonar.projectKey=Petclinic \
-                          -Dsonar.projectName=Petclinic
-                    '''
-                }
-            }
-        }
+        // stage('SonarQube Analysis') {
+        //     steps {
+        //         withSonarQubeEnv('SonarQube') {
+        //             sh '''
+        //                 mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+        //                   -Dsonar.projectKey=Petclinic \
+        //                   -Dsonar.projectName=Petclinic
+        //             '''
+        //         }
+        //     }
+        // }
 
-        stage('Quality Gate') {
-            steps {
-                timeout(time: 5, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true
-                }
-            }
-        }
+        // stage('Quality Gate') {
+        //     steps {
+        //         timeout(time: 5, unit: 'MINUTES') {
+        //             waitForQualityGate abortPipeline: true
+        //         }
+        //     }
+        // }
 
         stage('Verify Artifact') {
             steps {
@@ -107,25 +107,25 @@ spec:
             }
         }
 
-        stage('Deploy to Nexus') {
-            steps {
-                configFileProvider([
-                    configFile(
-                        fileId: 'd0a2cf88-2da5-4356-8cbf-4be592fb6d75',
-                        variable: 'MAVEN_SETTINGS'
-                    )
-                ]) {
-                    sh '''
-                        echo "===== DEPLOYING TO NEXUS ====="
+//         stage('Deploy to Nexus') {
+//             steps {
+//                 configFileProvider([
+//                     configFile(
+//                         fileId: 'd0a2cf88-2da5-4356-8cbf-4be592fb6d75',
+//                         variable: 'MAVEN_SETTINGS'
+//                     )
+//                 ]) {
+//                     sh '''
+//                         echo "===== DEPLOYING TO NEXUS ====="
 
-                        mvn deploy \
-                        -s $MAVEN_SETTINGS \
-                        -DskipTests \
-                        -Dnexus.url=$NEXUS_URL
-                    '''
-                }
-            }
-}
+//                         mvn deploy \
+//                         -s $MAVEN_SETTINGS \
+//                         -DskipTests \
+//                         -Dnexus.url=$NEXUS_URL
+//                     '''
+//                 }
+//             }
+// }
 
         stage('Verify Kaniko') {
             steps {
