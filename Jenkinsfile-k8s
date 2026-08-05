@@ -13,7 +13,7 @@ spec:
 
   containers:
   - name: tools
-    image: prakish980/jenkins-tools:v2
+    image: prakish980/jenkins-tools:v3
     imagePullPolicy: Always
     command:
     - sleep
