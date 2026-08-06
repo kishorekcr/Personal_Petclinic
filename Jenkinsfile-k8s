@@ -199,6 +199,51 @@ spec:
             }
         }
 
+        stage('Update GitOps Repository') {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'gitops-repo-creds',
+                        usernameVariable: 'GIT_USER',
+                        passwordVariable: 'GIT_TOKEN'
+                    )
+                ]) {
+                    sh '''
+                    echo "===== UPDATE GITOPS REPOSITORY ====="
+
+                    # Clean previous clone if exists
+                    rm -rf Petclinic_gitops
+
+                    # Clone GitOps repository
+                    git clone https://${GIT_USER}:${GIT_TOKEN}@github.com:kishorekcr/Petclinic_gitops.git
+
+                    cd Petclinic_gitops
+
+                    echo "===== BEFORE ====="
+                    grep "tag:" helm/petclinic/values.yaml
+
+                    # Update image tag
+                    sed -i 's|tag:.*|tag: "'"${BUILD_NUMBER}"'"|' helm/petclinic/values.yaml
+
+                    echo "===== AFTER ====="
+                    grep "tag:" helm/petclinic/values.yaml
+
+                    # Configure Git
+                    git config user.name "Jenkins CI"
+                    git config user.email "jenkins@example.com"
+
+                    # Commit & Push
+                    git add helm/petclinic/values.yaml
+
+                    git diff --cached --quiet || \
+                    git commit -m "Update image tag to ${BUILD_NUMBER}"
+
+                    git push origin main
+                    '''
+                }
+            }
+}
+
     }
 
     post {
