@@ -215,7 +215,7 @@ spec:
                     rm -rf Petclinic_gitops
 
                     # Clone GitOps repository
-                    git clone https://${GIT_USER}:${GIT_TOKEN}@github.com:kishorekcr/Petclinic_gitops.git
+                    git clone https://${GIT_USER}:${GIT_TOKEN}@github.com/kishorekcr/Petclinic_gitops.git
 
                     cd Petclinic_gitops
 
